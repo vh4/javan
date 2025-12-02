@@ -1,8 +1,8 @@
 import { MongoClient, Db } from 'mongodb';
 
 // Connection URI for MongoDB Atlas
-const uri = process.env.MONGODB_URL || 'mongodb://localhost:27017/mydatabase';
-const dbName = process.env.MONGODB_DB_NAME || 'tony';
+const uri =  'mongodb+srv://uguestberkah:uIKnB9SHzImh6RJq@cluster0.xnnbunu.mongodb.net/tony?appName=Cluster0';
+const dbName = 'tony';
 
 // Create a MongoClient with options optimized for Atlas
 const client = new MongoClient(uri, {
