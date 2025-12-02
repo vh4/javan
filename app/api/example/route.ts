@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Connect to both databases
     await dbManager.connectAll();

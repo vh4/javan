@@ -73,7 +73,7 @@ export class DatabaseManager {
   }
 
   // General MongoDB operations
-  public async saveToMongoDB(collection: string, data: any) {
+  public async saveToMongoDB(collection: string, data: Record<string, unknown>) {
     const db = this.getMongoDb();
     const result = await db.collection(collection).insertOne({
       ...data,
@@ -82,13 +82,13 @@ export class DatabaseManager {
     return result;
   }
 
-  public async findFromMongoDB(collection: string, query: any = {}) {
+  public async findFromMongoDB(collection: string, query: Record<string, unknown> = {}) {
     const db = this.getMongoDb();
     const result = await db.collection(collection).find(query).toArray();
     return result;
   }
 
-  public async findOneFromMongoDB(collection: string, query: any) {
+  public async findOneFromMongoDB(collection: string, query: Record<string, unknown>) {
     const db = this.getMongoDb();
     const result = await db.collection(collection).findOne(query);
     return result;

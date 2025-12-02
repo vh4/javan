@@ -72,7 +72,7 @@ export default function Home() {
       } else {
         setMessage(`Error: ${data.error}`);
       }
-    } catch (error) {
+    } catch {
       setMessage("Error: Failed to connect to server");
     } finally {
       setIsLoading(false);
@@ -88,8 +88,8 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4">
             <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold mb-4 text-gray-800">Welcome to Tony's App</h1>
-                <p className="text-gray-600 mb-2">Insert data into MongoDB Atlas database 'tony'</p>
+                <h1 className="text-4xl font-bold mb-4 text-gray-800">Welcome to Tony&apos;s App</h1>
+                <p className="text-gray-600 mb-2">Insert data into MongoDB Atlas database &apos;tony&apos;</p>
                 <p className="text-gray-500 text-sm">Account List Below</p>
             </div>
 
