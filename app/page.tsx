@@ -1,65 +1,210 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input"
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  password: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function Home() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: ""
+  });
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [accounts, setAccounts] = useState<User[]>([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
+
+  const fetchAccounts = async () => {
+    setIsLoadingAccounts(true);
+    try {
+      const response = await fetch("/api/mongodb/insert");
+      const data = await response.json();
+
+      if (data.success) {
+        setAccounts(data.users);
+      } else {
+        console.error('Failed to fetch accounts:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching accounts:', error);
+    } finally {
+      setIsLoadingAccounts(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/mongodb/insert", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage(`Success! User ID: ${data.insertedId}`);
+        setFormData({ name: "", email: "", password: "" });
+        // Refresh accounts list after successful submission
+        await fetchAccounts();
+      } else {
+        setMessage(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      setMessage("Error: Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load accounts when component mounts
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+            <div className="text-center mb-8">
+                <h1 className="text-4xl font-bold mb-4 text-gray-800">Welcome to Tony's App</h1>
+                <p className="text-gray-600 mb-2">Insert data into MongoDB Atlas database 'tony'</p>
+                <p className="text-gray-500 text-sm">Account List Below</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                {/* Form Section */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                    <h2 className="text-2xl font-semibold mb-6 text-gray-800">Create New Account</h2>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <Input
+                          type="text"
+                          placeholder="Name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          required
+                        />
+                        <Input
+                          type="email"
+                          placeholder="Email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          required
+                        />
+                        <Input
+                          type="password"
+                          placeholder="Password"
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          required
+                        />
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
+                        >
+                            {isLoading ? "Saving..." : "Save to MongoDB Atlas"}
+                        </button>
+                    </form>
+
+                    {message && (
+                      <div className={`mt-4 p-3 rounded text-sm ${
+                        message.includes("Success")
+                          ? "bg-green-100 text-green-700 border border-green-200"
+                          : "bg-red-100 text-red-700 border border-red-200"
+                      }`}>
+                        {message}
+                      </div>
+                    )}
+                </div>
+
+                {/* Table Section */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-semibold text-gray-800">Created Accounts</h2>
+                        <button
+                          onClick={fetchAccounts}
+                          disabled={isLoadingAccounts}
+                          className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 disabled:bg-gray-300 transition-colors"
+                        >
+                            {isLoadingAccounts ? "Refreshing..." : "Refresh"}
+                        </button>
+                    </div>
+
+                    {isLoadingAccounts ? (
+                      <div className="text-center py-8 text-gray-500">
+                        Loading accounts...
+                      </div>
+                    ) : accounts.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        No accounts created yet. Create your first account using the form.
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-gray-100 border-b">
+                                    <th className="text-left p-3 font-semibold text-gray-700">Name</th>
+                                    <th className="text-left p-3 font-semibold text-gray-700">Email</th>
+                                    <th className="text-left p-3 font-semibold text-gray-700">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {accounts.map((account, index) => (
+                                    <tr key={account._id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                        <td className="p-3 border-b border-gray-200">
+                                            <div className="font-medium text-gray-800">{account.name}</div>
+                                        </td>
+                                        <td className="p-3 border-b border-gray-200">
+                                            <div className="text-gray-600 text-sm">{account.email}</div>
+                                        </td>
+                                        <td className="p-3 border-b border-gray-200">
+                                            <div className="text-gray-500 text-xs">
+                                                {new Date(account.createdAt).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <div className="mt-4 text-sm text-gray-500 text-center">
+                            Total: {accounts.length} {accounts.length === 1 ? 'account' : 'accounts'}
+                        </div>
+                    </div>
+                )}
+                </div>
+            </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
     </div>
   );
 }
